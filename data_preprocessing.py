@@ -37,5 +37,5 @@ def preprocessing(df: pd.DataFrame):
         ("classifier", LogisticRegression(max_iter=1000))
     ])
     model.fit(X_train, y_train)
-    print("Test accuracy (toy example):", model.score(X_test, y_test))
+    print("Test accuracy:", model.score(X_test, y_test))
     print(model.named_steps["scaler"].get_feature_names_out())

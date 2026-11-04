@@ -8,6 +8,7 @@ def normalize(df: pd.DataFrame):
     df = df.apply(pd.to_numeric, errors="coerce")  # invalid numbers turn into missing value
     print("missing values:", df.isna().sum())
 
+    print("Duplicates:", df.duplicated().sum(), '\n')
     df = df.drop_duplicates()
 
     # to see outliers

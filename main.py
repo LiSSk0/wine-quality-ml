@@ -27,7 +27,6 @@ def main():
     print(df.head())
     # print(df.info())
     # print(df.dtypes)
-    print("Duplicates:", df.duplicated().sum(), '\n')
 
     df = normalize(df)
 
