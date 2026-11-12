@@ -2,11 +2,11 @@ import pandas as pd
 
 
 def normalize(df: pd.DataFrame):
-    # Find all missing values:
+    # find all missing values:
     df = df.replace(r"^\s*$", pd.NA, regex=True)
     # cols = df.columns.tolist()  # all columns are numerical
     df = df.apply(pd.to_numeric, errors="coerce")  # invalid numbers turn into missing value
-    print("missing values:", df.isna().sum())
+    print("missing values:\n", df.isna().sum())
 
     print("Duplicates:", df.duplicated().sum(), '\n')
     df = df.drop_duplicates()
