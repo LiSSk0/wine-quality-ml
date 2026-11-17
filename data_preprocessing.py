@@ -1,14 +1,12 @@
 import pandas as pd
-from scipy.odr import Model
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
-from sklearn.linear_model import Perceptron
-from sklearn.neural_network import MLPClassifier
-from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import confusion_matrix
 import numpy as np
 import matplotlib.pyplot as plt
+
+from models import create_logistic_regression, create_mlp, create_perceptron
 
 
 def plot_confusion_matrix(y_true, y_pred, cmap="coolwarm", subplot_position=111):
@@ -51,7 +49,7 @@ def preprocessing(df: pd.DataFrame):
     # LogisticRegression prediction
     model = Pipeline(steps=[
         ("scaler", StandardScaler()),  # 0 - mean value
-        ("classifier", LogisticRegression(max_iter=1000))
+        ("classifier", create_logistic_regression())
     ])
     model.fit(X_train, y_train)
     predictions = model.predict(X_test)
@@ -66,12 +64,7 @@ def preprocessing(df: pd.DataFrame):
     # Perceptron prediction
     model = Pipeline(steps=[
         ("scaler", StandardScaler()),
-        ("classifier", Perceptron(
-            tol=1e-15,  # training stops when the loss improvement falls below this value
-            eta0=0.01,  # initial learning rate for weight updates
-            max_iter=10000,  # maximum number of passes over the training data
-            random_state=None  # no fixed seed, so results vary between runs
-        ))
+        ("classifier", create_perceptron())
     ])
 
     model.fit(X_train, y_train)
@@ -90,14 +83,7 @@ def preprocessing(df: pd.DataFrame):
     # FF prediction
     clf = Pipeline(steps=[
         ("scaler", StandardScaler()),
-        ("classifier", MLPClassifier(
-            solver="lbfgs",  # quasi-Newton optimizer used for training (good for small datasets)
-            hidden_layer_sizes=(30, 12, 15, 10, 19),  # 5 hidden layers with 30, 12, 15, 10, and 19 neurons respectively
-            activation="tanh",  # hyperbolic tangent activation function for hidden neurons
-            alpha=1e-5,  # L2 regularization strength (very small, so little regularization)
-            max_iter=1000,  # maximum number of training iterations
-            random_state=None  # no fixed seed
-        ))
+        ("classifier", create_mlp())
     ])
 
     clf.fit(X_train, y_train)
