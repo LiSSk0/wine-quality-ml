@@ -12,17 +12,17 @@ from sklearn_som.som import SOM
 
 # ML_DL_Data_Cleaning_One_Hot_Encoding_Guide.docx
 def create_logistic_regression():
-    return LogisticRegression(max_iter=1000)
+    return LogisticRegression(max_iter=1000, random_state=42)
 
 
 # LabML1_perc_lin.py
 def create_linear_classifier():
-    return SGDClassifier(eta0=0.05, max_iter=1000, tol=1e-15, random_state=10)
+    return SGDClassifier(eta0=0.05, max_iter=1000, tol=1e-15, random_state=42)
 
 
 # LabML1_perc_lin.py
 def create_perceptron():
-    return Perceptron(tol=1e-15, eta0=0.01, max_iter=10000, random_state=None)
+    return Perceptron(tol=1e-15, eta0=0.01, max_iter=10000, random_state=42)
 
 
 # LabML2_MLP.py
@@ -33,12 +33,13 @@ def create_mlp():
         activation='tanh',
         alpha=1e-5,
         max_iter=1000,
-        random_state=None,
+        random_state=42,
     )
 
 
 # LabML3_FF.py
 def create_ffnn(input_shape, Nbclasses):
+    tf.keras.utils.set_random_seed(42)
 
     clf = models.Sequential()
     clf.add(Dense(100, activation='sigmoid', input_shape=input_shape))
@@ -60,12 +61,12 @@ def create_ffnn(input_shape, Nbclasses):
 
 # LabML4_SVM.py
 def create_linear_svm():
-    return svm.SVC(kernel='linear')
+    return svm.SVC(kernel='linear', random_state=42)
 
 
 # LabML4_SVM.py
 def create_rbf_svm():
-    return svm.SVC(kernel='rbf', gamma=1, C=10, probability=True)
+    return svm.SVC(kernel='rbf', gamma=1, C=10, probability=True, random_state=42)
 
 
 # LabML7_RBF.py
@@ -77,7 +78,7 @@ def train_rbf(X_train, X_test, y_train, centers, gamma=0.2):
         kernel='linear',
         probability=True,
         tol=1e-3,
-        random_state=None,
+        random_state=42,
     )
     clf.fit(Ztrain, y_train)
     Ztest = rbf_kernel(X_test, centers, gamma=gamma)
@@ -91,7 +92,7 @@ def train_som_rbf(X_train, X_test, y_train):
     n1 = 5
     dim = X_train.shape[1]
     som = SOM(
-        m=m1, n=n1, dim=dim, random_state=None,
+        m=m1, n=n1, dim=dim, random_state=42,
         max_iter=50000, lr=1, sigma=1,
     )
     som.fit(X_train)
@@ -103,7 +104,7 @@ def train_som_rbf(X_train, X_test, y_train):
         kernel='linear',
         probability=True,
         tol=1e-3,
-        random_state=None,
+        random_state=42,
     )
     clf.fit(Z, y_train)
     Z1 = rbf_kernel(X_test, centers, gamma=gamma)
@@ -125,7 +126,7 @@ def create_knn_sqrt(n_samples):
 # Part 3 - Decisiontree .pptx
 def create_decision_tree():
     return tree.DecisionTreeClassifier(
-        criterion='entropy', max_depth=4, splitter='best',
+        criterion='entropy', max_depth=4, splitter='best', random_state=42,
     )
 
 
@@ -137,6 +138,6 @@ def create_random_forest():
         criterion='entropy',
         n_estimators=20,
         max_depth=6,
-        random_state=10,
+        random_state=42,
         verbose=1,
     )
