@@ -1,26 +1,22 @@
-import pandas as pd
-from data_normalize import normalize
-from data_preprocessing import preprocessing
 import os
 import warnings
 import logging
 
-os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
-warnings.filterwarnings("ignore")
-logging.getLogger("tensorflow").setLevel(logging.ERROR)
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+warnings.filterwarnings('ignore')
+logging.getLogger('tensorflow').setLevel(logging.ERROR)
+
+import pandas as pd
+from data_normalize import normalize
+from data_preprocessing import preprocessing
 
 
 def main():
-    # url = "https://archive.ics.uci.edu/ml/machine-learning-databases/wine-quality/winequality-red.csv"
     df = pd.read_csv('redwine_data.csv', sep=';')
-
     print(df.head())
-    # print(df.info())
-    # print(df.dtypes)
-
     df = normalize(df)
 
-    # Divide data into train/test
+    # Run baseline, tuning and comparison in order.
     preprocessing(df)
 
 
