@@ -1,40 +1,10 @@
-import numpy as np
-from sklearn import svm, tree
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.linear_model import LogisticRegression, Perceptron, SGDClassifier
+from sklearn import svm
+from sklearn.cluster import KMeans
 from sklearn.metrics.pairwise import rbf_kernel
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.neural_network import MLPClassifier
 import tensorflow as tf
 from tensorflow.keras import models
 from tensorflow.keras.layers import Dense
 from sklearn_som.som import SOM
-
-# ML_DL_Data_Cleaning_One_Hot_Encoding_Guide.docx
-def create_logistic_regression():
-    return LogisticRegression(max_iter=1000, random_state=42)
-
-
-# LabML1_perc_lin.py
-def create_linear_classifier():
-    return SGDClassifier(eta0=0.05, max_iter=1000, tol=1e-15, random_state=42)
-
-
-# LabML1_perc_lin.py
-def create_perceptron():
-    return Perceptron(tol=1e-15, eta0=0.01, max_iter=10000, random_state=42)
-
-
-# LabML2_MLP.py
-def create_mlp():
-    return MLPClassifier(
-        solver='lbfgs',
-        hidden_layer_sizes=(30, 12, 15, 10, 19),
-        activation='tanh',
-        alpha=1e-5,
-        max_iter=1000,
-        random_state=42,
-    )
 
 
 # LabML3_FF.py
@@ -57,16 +27,6 @@ def create_ffnn(input_shape, Nbclasses):
         metrics=['accuracy'],
     )
     return clf
-
-
-# LabML4_SVM.py
-def create_linear_svm():
-    return svm.SVC(kernel='linear', random_state=42)
-
-
-# LabML4_SVM.py
-def create_rbf_svm():
-    return svm.SVC(kernel='rbf', gamma=1, C=10, probability=True, random_state=42)
 
 
 # LabML7_RBF.py
@@ -112,32 +72,11 @@ def train_som_rbf(X_train, X_test, y_train):
     return som, clf, predictions
 
 
-# LabML9_KNN.py
-def create_knn():
-    return KNeighborsClassifier(n_neighbors=10)
-
-
-# LabML9_KNN.py
-def create_knn_sqrt(n_samples):
-    K = int(np.sqrt(n_samples))
-    return KNeighborsClassifier(n_neighbors=K)
-
-
-# Part 3 - Decisiontree .pptx
-def create_decision_tree():
-    return tree.DecisionTreeClassifier(
-        criterion='entropy', max_depth=4, splitter='best', random_state=42,
-    )
-
-
-# Part 4 - RandomForest.pptx
-def create_random_forest():
-    return RandomForestClassifier(
-        bootstrap=True,
-        max_features=2,
-        criterion='entropy',
-        n_estimators=20,
-        max_depth=6,
-        random_state=42,
-        verbose=1,
-    )
+# LabML5_Kmeans.py
+# LabML7_RBF.py
+def train_initial_rbf(X_train, X_test, y_train):
+    nb_clusters = len(set(y_train))
+    model = KMeans(n_clusters=nb_clusters, random_state=42)
+    model.fit(X_train)
+    centers = model.cluster_centers_
+    return train_rbf(X_train, X_test, y_train, centers, gamma=0.2)

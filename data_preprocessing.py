@@ -6,21 +6,14 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import accuracy_score
 import numpy as np
 
-from default_models import (
-    create_default_decision_tree,
-    create_default_knn,
-    create_default_linear_classifier,
-    create_default_linear_svm,
-    create_default_logistic_regression,
-    create_default_mlp,
-    create_default_perceptron,
-    create_default_random_forest,
-    create_default_rbf_svm,
-    create_dummy_classifier,
-    create_initial_ffnn,
-    train_initial_rbf,
-    train_initial_som_rbf,
-)
+from sklearn import svm, tree
+from sklearn.dummy import DummyClassifier
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.linear_model import LogisticRegression, Perceptron, SGDClassifier
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.neural_network import MLPClassifier
+
+from models import create_ffnn, train_initial_rbf, train_som_rbf
 
 from plots import plot_confusion_matrix
 
@@ -42,7 +35,7 @@ def preprocessing(df: pd.DataFrame):
     # LogisticRegression prediction
     model = Pipeline(steps=[
         ("scaler", StandardScaler()),  # 0 - mean value
-        ("classifier", create_default_logistic_regression())
+        ("classifier", LogisticRegression(random_state=42))
     ])
     model.fit(X_train, y_train)
     predictions = model.predict(X_test)
@@ -57,7 +50,7 @@ def preprocessing(df: pd.DataFrame):
     # Perceptron prediction
     model = Pipeline(steps=[
         ("scaler", StandardScaler()),
-        ("classifier", create_default_perceptron())
+        ("classifier", Perceptron(random_state=42))
     ])
 
     model.fit(X_train, y_train)
@@ -75,7 +68,7 @@ def preprocessing(df: pd.DataFrame):
     # MLP prediction
     clf = Pipeline(steps=[
         ("scaler", StandardScaler()),
-        ("classifier", create_default_mlp())
+        ("classifier", MLPClassifier(random_state=42))
     ])
 
     clf.fit(X_train, y_train)
@@ -93,7 +86,7 @@ def preprocessing(df: pd.DataFrame):
     # Linear classifier prediction
     model = Pipeline(steps=[
         ("scaler", StandardScaler()),
-        ("classifier", create_default_linear_classifier())
+        ("classifier", SGDClassifier(random_state=42))
     ])
     model.fit(X_train, y_train)
     predictions = model.predict(X_test)
@@ -108,7 +101,7 @@ def preprocessing(df: pd.DataFrame):
     # Linear SVM prediction
     model = Pipeline(steps=[
         ("scaler", StandardScaler()),
-        ("classifier", create_default_linear_svm())
+        ("classifier", svm.SVC(kernel='linear', random_state=42))
     ])
     model.fit(X_train, y_train)
     predictions = model.predict(X_test)
@@ -123,7 +116,7 @@ def preprocessing(df: pd.DataFrame):
     # RBF SVM prediction
     model = Pipeline(steps=[
         ("scaler", StandardScaler()),
-        ("classifier", create_default_rbf_svm())
+        ("classifier", svm.SVC(random_state=42))
     ])
     model.fit(X_train, y_train)
     predictions = model.predict(X_test)
@@ -138,7 +131,7 @@ def preprocessing(df: pd.DataFrame):
     # KNN prediction
     model = Pipeline(steps=[
         ("scaler", StandardScaler()),
-        ("classifier", create_default_knn())
+        ("classifier", KNeighborsClassifier())
     ])
     model.fit(X_train, y_train)
     predictions = model.predict(X_test)
@@ -151,7 +144,7 @@ def preprocessing(df: pd.DataFrame):
     )
 
     # Dummy majority baseline
-    model = create_dummy_classifier()
+    model = DummyClassifier(strategy='most_frequent', random_state=42)
     model.fit(X_train, y_train)
     predictions = model.predict(X_test)
     print("\nDummy (most frequent)")
@@ -163,7 +156,7 @@ def preprocessing(df: pd.DataFrame):
     )
 
     # Decision Tree prediction
-    model = create_default_decision_tree()
+    model = tree.DecisionTreeClassifier(random_state=42)
     model.fit(X_train, y_train)
     predictions = model.predict(X_test)
     print("\nDecision Tree")
@@ -175,7 +168,7 @@ def preprocessing(df: pd.DataFrame):
     )
 
     # Random Forest prediction
-    model = create_default_random_forest()
+    model = RandomForestClassifier(random_state=42)
     model.fit(X_train, y_train)
     predictions = model.predict(X_test)
     print("\nRandom Forest")
@@ -186,17 +179,17 @@ def preprocessing(df: pd.DataFrame):
         output_path=PLOTS_DIR / "random_forest.png", show=SHOW_PLOTS,
     )
 
-    print("\nBaseline: initial lab configurations (not library defaults)")
+    print("\nBaseline: initial lab configs")
     scaler = StandardScaler()
     X_train_scaled = scaler.fit_transform(X_train)
     X_test_scaled = scaler.transform(X_test)
 
-    # LabML3_FF.py
-    clf = create_initial_ffnn([X_train_scaled.shape[1]], len(np.unique(y_train)))
+    # FFNN (from LabML3_FF.py)
+    clf = create_ffnn([X_train_scaled.shape[1]], len(np.unique(y_train)))
     clf.fit(X_train_scaled, y_train, epochs=500, verbose=0)
     pred = clf.predict(X_test_scaled, verbose=0)
     predictions = pred.argmax(axis=1)
-    print("\nFFNN (initial lab configuration)")
+    print("\nFFNN (initial lab config)")
     print("Accuracy:", accuracy_score(y_test, predictions))
 
     plot_confusion_matrix(
@@ -204,11 +197,9 @@ def preprocessing(df: pd.DataFrame):
         output_path=PLOTS_DIR / "ffnn.png", show=SHOW_PLOTS,
     )
 
-    # LabML7_RBF.py
-    clf, predictions = train_initial_rbf(
-        X_train_scaled, X_test_scaled, y_train,
-    )
-    print("\nRBF network (initial configuration)")
+    # RBF (from LabML7_RBF.py)
+    clf, predictions = train_initial_rbf(X_train_scaled, X_test_scaled, y_train)
+    print("\nRBF network (initial config)")
     print("Accuracy:", accuracy_score(y_test, predictions))
 
     plot_confusion_matrix(
@@ -216,14 +207,12 @@ def preprocessing(df: pd.DataFrame):
         output_path=PLOTS_DIR / "rbf_network.png", show=SHOW_PLOTS,
     )
 
-    # LabML8_SOM_RBF.py
-    som, clf, predictions = train_initial_som_rbf(
-        X_train_scaled, X_test_scaled, y_train,
-    )
-    print("\nSOM + RBF (initial lab configuration)")
+    # SOM + RBF (from LabML8_SOM_RBF.py)
+    som, clf, predictions = train_som_rbf(X_train_scaled, X_test_scaled, y_train)
+    print("\nSOM + RBF (initial lab config)")
     print("Accuracy:", accuracy_score(y_test, predictions))
 
     plot_confusion_matrix(
-        y_test, predictions, title="SOM + RBF (initial lab configuration)",
+        y_test, predictions, title="SOM + RBF (initial lab config)",
         output_path=PLOTS_DIR / "som_rbf.png", show=SHOW_PLOTS,
     )

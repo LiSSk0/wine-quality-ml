@@ -1,20 +1,18 @@
 import pandas as pd
 from data_normalize import normalize
 from data_preprocessing import preprocessing
+import os
+import warnings
+import logging
+
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
+warnings.filterwarnings("ignore")
+logging.getLogger("tensorflow").setLevel(logging.ERROR)
 
 
 def main():
     # url = "https://archive.ics.uci.edu/ml/machine-learning-databases/wine-quality/winequality-red.csv"
     df = pd.read_csv('redwine_data.csv', sep=';')
-    """
-    df = pd.DataFrame({
-        "Age": [20, np.nan, 22, 21, 24, 20],
-        "Hours": [5, 7, "", 3, 8, 6],
-        "City": ["Tripoli", "Beirut", "Tripoli", " ", "Beirut", "Saida"],
-        "Program": ["Engineering", "Science", "Engineering", "Medicine", "", "Science"],
-        "Passed": ["Yes", "No", "Yes", "No", "Yes", "No"]
-    })
-    """
 
     print(df.head())
     # print(df.info())
