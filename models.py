@@ -20,7 +20,6 @@ def create_ffnn(input_shape, Nbclasses, learning_rate=0.001):
     clf.add(Dense(units=40, activation='tanh'))
     clf.add(Dense(Nbclasses, activation='softmax'))
 
-    # На выходе softmax: loss получает вероятности, а не logits.
     clf.compile(
         optimizer=tf.keras.optimizers.RMSprop(learning_rate=learning_rate),
         loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False),
@@ -36,7 +35,7 @@ def train_rbf_network(X_train, X_test, y_train, n_centers=None, gamma=0.2, C=1):
     kmeans = KMeans(n_clusters=n_centers, random_state=42)
     kmeans.fit(X_train)
     centers = kmeans.cluster_centers_
-    # centers передаются из обучающих данных, без использования test.
+    # centers передаются из обучающих данных, без использования test
     Ztrain = rbf_kernel(X_train, centers, gamma=gamma)
     clf = svm.SVC(
         C=C,

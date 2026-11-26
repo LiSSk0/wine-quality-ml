@@ -15,8 +15,6 @@ def main():
     df = pd.read_csv('redwine_data.csv', sep=';')
     print(df.head())
     df = normalize(df)
-
-    # Run baseline, tuning and comparison in order.
     preprocessing(df)
 
 

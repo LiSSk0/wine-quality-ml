@@ -11,7 +11,7 @@ from models import create_ffnn, train_rbf_network, train_som_rbf
 
 
 def tune_classifier(name, classifier, parameters, X_train, y_train, scale=True):
-    # The same five folds are used for every combination and every classifier.
+    # the same five folds are used for every combination and every classifier
     cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
     best_score = -1
     best_params = None
@@ -25,7 +25,7 @@ def tune_classifier(name, classifier, parameters, X_train, y_train, scale=True):
             y_train_fold = y_train.iloc[train_index]
             y_validation = y_train.iloc[validation_index]
 
-            # A fresh model for each fold; scaling is fitted on that fold only.
+            # a fresh model for each fold. scaling is fitted on that fold only
             model = clone(classifier).set_params(**params)
             if scale:
                 model = Pipeline(steps=[
@@ -49,7 +49,7 @@ def tune_classifier(name, classifier, parameters, X_train, y_train, scale=True):
             best_score = score
             best_params = params
 
-    # Train the best configuration on all training data.
+    # train the best configuration on all training data
     best_model = clone(classifier).set_params(**best_params)
     if scale:
         best_model = Pipeline(steps=[

@@ -21,7 +21,7 @@ SHOW_PLOTS = False
 
 
 def record_result(name, version, y_test, predictions, results, reports, parameters=None, cv_score=None):
-    # Print and remember test metrics and class reports.
+    # print and remember test metrics and class reports
     accuracy = accuracy_score(y_test, predictions)
     macro_f1 = f1_score(y_test, predictions, average='macro', zero_division=0)
     print(f'\n{name} ({version})')
@@ -138,7 +138,7 @@ def preprocessing(df: pd.DataFrame):
     predictions = model.predict(X_test)
     record_result('Random Forest', 'baseline', y_test, predictions, results, reports)
 
-    # Dummy: comparison with always predicting the most frequent class.
+    # Dummy: comparison with always predicting the most frequent class
     model = DummyClassifier(strategy='most_frequent', random_state=42)
     model.fit(X_train, y_train)
     predictions = model.predict(X_test)
@@ -156,7 +156,7 @@ def preprocessing(df: pd.DataFrame):
     record_result('FFNN', 'baseline', y_test, predictions, results, reports,
                   parameters={'epochs': 500, 'learning_rate': 0.001})
 
-    # RBF network: centers are selected using training data only.
+    # RBF network: centers are selected using training data only
     _, predictions = train_rbf_network(X_train_scaled, X_test_scaled, y_train)
     record_result('RBF network', 'baseline', y_test, predictions, results, reports,
                   parameters={'n_centers': 3, 'gamma': 0.2, 'C': 1})
@@ -166,7 +166,7 @@ def preprocessing(df: pd.DataFrame):
     record_result('SOM + RBF', 'baseline', y_test, predictions, results, reports,
                   parameters={'map_size': (5, 5), 'gamma': 0.1, 'C': 1})
 
-    # Tune on train first. Evaluate on test only after the best parameters are chosen.
+    # tune on train first. evaluate on test only after the best parameters are chosen
     print('\nTUNING: five-fold CV on train, selection by macro-F1')
 
     # Logistic Regression

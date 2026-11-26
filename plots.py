@@ -10,7 +10,6 @@ from sklearn.metrics import confusion_matrix
 def plot_confusion_matrix(y_true, y_pred, title, output_path, show=False, cmap="coolwarm"):
     cm = confusion_matrix(y_true, y_pred, labels=[0, 1, 2])
 
-    # Без show создаём изображение без открытия графического окна.
     fig = plt.figure(figsize=(7, 6)) if show else Figure(figsize=(7, 6))
     try:
         ax = fig.add_subplot(111)
