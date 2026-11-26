@@ -5,7 +5,7 @@ from sklearn import svm, tree
 from sklearn.dummy import DummyClassifier
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression, Perceptron, SGDClassifier
-from sklearn.metrics import accuracy_score, f1_score
+from sklearn.metrics import accuracy_score, classification_report, f1_score
 from sklearn.model_selection import train_test_split
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.neural_network import MLPClassifier
@@ -20,13 +20,25 @@ from tuning import tune_classifier, tune_ffnn, tune_rbf_network, tune_som_rbf
 SHOW_PLOTS = False
 
 
-def record_result(name, version, y_test, predictions, results, parameters=None, cv_score=None):
-    # Print and remember the same two metrics for every model.
+def record_result(name, version, y_test, predictions, results, reports, parameters=None, cv_score=None):
+    # Print and remember test metrics and class reports.
     accuracy = accuracy_score(y_test, predictions)
     macro_f1 = f1_score(y_test, predictions, average='macro', zero_division=0)
     print(f'\n{name} ({version})')
     print(f'Accuracy: {accuracy:.4f}')
     print(f'Macro-F1: {macro_f1:.4f}')
+    print(classification_report(
+        y_test, predictions, labels=[0, 1, 2],
+        target_names=['low', 'medium', 'high'], digits=4, zero_division=0,
+    ))
+    report = classification_report(
+        y_test, predictions, labels=[0, 1, 2],
+        target_names=['low', 'medium', 'high'], output_dict=True, zero_division=0,
+    )
+    for label, values in report.items():
+        if label == 'accuracy':
+            values = {'accuracy': values, 'support': len(y_test)}
+        reports.append({'model': name, 'version': version, 'class': label, **values})
     results.append({
         'model': name, 'version': version, 'accuracy': accuracy,
         'macro_f1': macro_f1, 'parameters': str(parameters), 'cv_macro_f1': cv_score,
@@ -45,6 +57,7 @@ def preprocessing(df: pd.DataFrame):
         X, y, test_size=0.33, random_state=42, stratify=y,
     )
     results = []
+    reports = []
     cv_results = []
     os.makedirs('results', exist_ok=True)
 
@@ -57,7 +70,7 @@ def preprocessing(df: pd.DataFrame):
     ])
     model.fit(X_train, y_train)
     predictions = model.predict(X_test)
-    record_result('Logistic Regression', 'baseline', y_test, predictions, results)
+    record_result('Logistic Regression', 'baseline', y_test, predictions, results, reports)
 
     # Perceptron
     model = Pipeline(steps=[
@@ -66,7 +79,7 @@ def preprocessing(df: pd.DataFrame):
     ])
     model.fit(X_train, y_train)
     predictions = model.predict(X_test)
-    record_result('Perceptron', 'baseline', y_test, predictions, results)
+    record_result('Perceptron', 'baseline', y_test, predictions, results, reports)
 
     # MLP
     model = Pipeline(steps=[
@@ -75,7 +88,7 @@ def preprocessing(df: pd.DataFrame):
     ])
     model.fit(X_train, y_train)
     predictions = model.predict(X_test)
-    record_result('MLP', 'baseline', y_test, predictions, results)
+    record_result('MLP', 'baseline', y_test, predictions, results, reports)
 
     # Linear SGD
     model = Pipeline(steps=[
@@ -84,7 +97,7 @@ def preprocessing(df: pd.DataFrame):
     ])
     model.fit(X_train, y_train)
     predictions = model.predict(X_test)
-    record_result('Linear SGD', 'baseline', y_test, predictions, results)
+    record_result('Linear SGD', 'baseline', y_test, predictions, results, reports)
 
     # Linear SVM
     model = Pipeline(steps=[
@@ -93,7 +106,7 @@ def preprocessing(df: pd.DataFrame):
     ])
     model.fit(X_train, y_train)
     predictions = model.predict(X_test)
-    record_result('Linear SVM', 'baseline', y_test, predictions, results)
+    record_result('Linear SVM', 'baseline', y_test, predictions, results, reports)
 
     # RBF SVM
     model = Pipeline(steps=[
@@ -102,7 +115,7 @@ def preprocessing(df: pd.DataFrame):
     ])
     model.fit(X_train, y_train)
     predictions = model.predict(X_test)
-    record_result('RBF SVM', 'baseline', y_test, predictions, results)
+    record_result('RBF SVM', 'baseline', y_test, predictions, results, reports)
 
     # KNN
     model = Pipeline(steps=[
@@ -111,25 +124,25 @@ def preprocessing(df: pd.DataFrame):
     ])
     model.fit(X_train, y_train)
     predictions = model.predict(X_test)
-    record_result('KNN', 'baseline', y_test, predictions, results)
+    record_result('KNN', 'baseline', y_test, predictions, results, reports)
 
     # Decision Tree
     model = tree.DecisionTreeClassifier(random_state=42)
     model.fit(X_train, y_train)
     predictions = model.predict(X_test)
-    record_result('Decision Tree', 'baseline', y_test, predictions, results)
+    record_result('Decision Tree', 'baseline', y_test, predictions, results, reports)
 
     # Random Forest
     model = RandomForestClassifier(random_state=42)
     model.fit(X_train, y_train)
     predictions = model.predict(X_test)
-    record_result('Random Forest', 'baseline', y_test, predictions, results)
+    record_result('Random Forest', 'baseline', y_test, predictions, results, reports)
 
     # Dummy: comparison with always predicting the most frequent class.
     model = DummyClassifier(strategy='most_frequent', random_state=42)
     model.fit(X_train, y_train)
     predictions = model.predict(X_test)
-    record_result('Dummy', 'baseline', y_test, predictions, results)
+    record_result('Dummy', 'baseline', y_test, predictions, results, reports)
 
     print('\nBASELINE: initial lab configurations')
     scaler = StandardScaler()
@@ -140,17 +153,17 @@ def preprocessing(df: pd.DataFrame):
     model = create_ffnn([X_train_scaled.shape[1]], len(np.unique(y_train)))
     model.fit(X_train_scaled, y_train, epochs=500, verbose=0)
     predictions = model.predict(X_test_scaled, verbose=0).argmax(axis=1)
-    record_result('FFNN', 'baseline', y_test, predictions, results,
+    record_result('FFNN', 'baseline', y_test, predictions, results, reports,
                   parameters={'epochs': 500, 'learning_rate': 0.001})
 
     # RBF network: centers are selected using training data only.
     _, predictions = train_rbf_network(X_train_scaled, X_test_scaled, y_train)
-    record_result('RBF network', 'baseline', y_test, predictions, results,
+    record_result('RBF network', 'baseline', y_test, predictions, results, reports,
                   parameters={'n_centers': 3, 'gamma': 0.2, 'C': 1})
 
     # SOM + RBF
     _, _, predictions = train_som_rbf(X_train_scaled, X_test_scaled, y_train)
-    record_result('SOM + RBF', 'baseline', y_test, predictions, results,
+    record_result('SOM + RBF', 'baseline', y_test, predictions, results, reports,
                   parameters={'map_size': (5, 5), 'gamma': 0.1, 'C': 1})
 
     # Tune on train first. Evaluate on test only after the best parameters are chosen.
@@ -164,7 +177,7 @@ def preprocessing(df: pd.DataFrame):
     )
     cv_results.append(table)
     predictions = model.predict(X_test)
-    record_result('Logistic Regression', 'tuned', y_test, predictions, results, params, score)
+    record_result('Logistic Regression', 'tuned', y_test, predictions, results, reports, params, score)
 
     # Perceptron
     model, table, params, score = tune_classifier(
@@ -174,7 +187,7 @@ def preprocessing(df: pd.DataFrame):
     )
     cv_results.append(table)
     predictions = model.predict(X_test)
-    record_result('Perceptron', 'tuned', y_test, predictions, results, params, score)
+    record_result('Perceptron', 'tuned', y_test, predictions, results, reports, params, score)
 
     # MLP
     model, table, params, score = tune_classifier(
@@ -184,7 +197,7 @@ def preprocessing(df: pd.DataFrame):
     )
     cv_results.append(table)
     predictions = model.predict(X_test)
-    record_result('MLP', 'tuned', y_test, predictions, results, params, score)
+    record_result('MLP', 'tuned', y_test, predictions, results, reports, params, score)
 
     # Linear SGD
     model, table, params, score = tune_classifier(
@@ -194,7 +207,7 @@ def preprocessing(df: pd.DataFrame):
     )
     cv_results.append(table)
     predictions = model.predict(X_test)
-    record_result('Linear SGD', 'tuned', y_test, predictions, results, params, score)
+    record_result('Linear SGD', 'tuned', y_test, predictions, results, reports, params, score)
 
     # Linear SVM
     model, table, params, score = tune_classifier(
@@ -204,7 +217,7 @@ def preprocessing(df: pd.DataFrame):
     )
     cv_results.append(table)
     predictions = model.predict(X_test)
-    record_result('Linear SVM', 'tuned', y_test, predictions, results, params, score)
+    record_result('Linear SVM', 'tuned', y_test, predictions, results, reports, params, score)
 
     # RBF SVM
     model, table, params, score = tune_classifier(
@@ -214,7 +227,7 @@ def preprocessing(df: pd.DataFrame):
     )
     cv_results.append(table)
     predictions = model.predict(X_test)
-    record_result('RBF SVM', 'tuned', y_test, predictions, results, params, score)
+    record_result('RBF SVM', 'tuned', y_test, predictions, results, reports, params, score)
 
     # KNN
     model, table, params, score = tune_classifier(
@@ -224,7 +237,7 @@ def preprocessing(df: pd.DataFrame):
     )
     cv_results.append(table)
     predictions = model.predict(X_test)
-    record_result('KNN', 'tuned', y_test, predictions, results, params, score)
+    record_result('KNN', 'tuned', y_test, predictions, results, reports, params, score)
 
     # Decision Tree
     model, table, params, score = tune_classifier(
@@ -234,7 +247,7 @@ def preprocessing(df: pd.DataFrame):
     )
     cv_results.append(table)
     predictions = model.predict(X_test)
-    record_result('Decision Tree', 'tuned', y_test, predictions, results, params, score)
+    record_result('Decision Tree', 'tuned', y_test, predictions, results, reports, params, score)
 
     # Random Forest
     model, table, params, score = tune_classifier(
@@ -244,7 +257,7 @@ def preprocessing(df: pd.DataFrame):
     )
     cv_results.append(table)
     predictions = model.predict(X_test)
-    record_result('Random Forest', 'tuned', y_test, predictions, results, params, score)
+    record_result('Random Forest', 'tuned', y_test, predictions, results, reports, params, score)
 
     # RBF network
     params, table, score = tune_rbf_network(X_train, y_train)
@@ -253,7 +266,7 @@ def preprocessing(df: pd.DataFrame):
         X_train_scaled, X_test_scaled, y_train,
         n_centers=params['n_centers'], gamma=params['gamma'], C=params['C'],
     )
-    record_result('RBF network', 'tuned', y_test, predictions, results, params, score)
+    record_result('RBF network', 'tuned', y_test, predictions, results, reports, params, score)
 
     # SOM + RBF
     params, table, score = tune_som_rbf(X_train, y_train)
@@ -262,7 +275,7 @@ def preprocessing(df: pd.DataFrame):
         X_train_scaled, X_test_scaled, y_train,
         map_size=params['map_size'], gamma=params['gamma'], C=params['C'],
     )
-    record_result('SOM + RBF', 'tuned', y_test, predictions, results, params, score)
+    record_result('SOM + RBF', 'tuned', y_test, predictions, results, reports, params, score)
 
     # FFNN
     params, table, score = tune_ffnn(X_train, y_train)
@@ -273,11 +286,12 @@ def preprocessing(df: pd.DataFrame):
     )
     tf_model.fit(X_train_scaled, y_train, epochs=params['epochs'], verbose=0)
     predictions = tf_model.predict(X_test_scaled, verbose=0).argmax(axis=1)
-    record_result('FFNN', 'tuned', y_test, predictions, results, params, score)
+    record_result('FFNN', 'tuned', y_test, predictions, results, reports, params, score)
 
     # Save the results needed for the report.
     results_df = pd.DataFrame(results)
     results_df.to_csv('results/model_results.csv', index=False)
+    pd.DataFrame(reports).to_csv('results/classification_reports.csv', index=False)
     pd.concat(cv_results, ignore_index=True).to_csv('results/cv_results.csv', index=False)
 
     baseline = results_df[results_df['version'] == 'baseline'][
